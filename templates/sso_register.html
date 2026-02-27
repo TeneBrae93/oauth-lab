@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | HackSmarter ID</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container" style="border-top: 4px solid #6366f1;">
+        
+        <h3>Create your HackSmarter ID</h3>
+        <p style="margin-bottom: 24px;">Register to access training labs and courses.</p>
+
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <form action="/sso/register" method="POST" style="text-align: left;">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Choose a Username</label>
+                <input type="text" name="username" required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f1115; color: white; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Choose a Password</label>
+                <input type="password" name="password" required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f1115; color: white; box-sizing: border-box;">
+            </div>
+
+            <button type="submit" class="btn">Create Account</button>
+        </form>
+
+        <p style="margin-top: 24px; font-size: 14px;">
+            Already have an account? <a href="/sso/login" style="color: #6366f1; text-decoration: none;">Sign in</a>
+        </p>
+    </div>
+</body>
+</html>

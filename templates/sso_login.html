@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | HackSmarter ID</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container" style="border-top: 4px solid #6366f1;">
+        <div style="margin-bottom: 24px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </div>
+        
+        <h3>Sign in to HackSmarter ID</h3>
+        <p style="margin-bottom: 24px;">One account for all Hack Smarter platforms.</p>
+
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <form action="/sso/login" method="POST" style="text-align: left;">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Username</label>
+                <input type="text" name="username" required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f1115; color: white; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Password</label>
+                <input type="password" name="password" required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f1115; color: white; box-sizing: border-box;">
+            </div>
+
+            <button type="submit" class="btn">Sign In</button>
+        </form>
+
+        <p style="margin-top: 24px; font-size: 14px;">
+            Don't have an account? <a href="/sso/register" style="color: #6366f1; text-decoration: none;">Register here</a>
+        </p>
+    </div>
+</body>
+</html>
