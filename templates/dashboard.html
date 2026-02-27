@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Hack Smarter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container wide">
+        <div class="dash-header">
+            <div class="brand-logo" style="margin: 0;">Hack<span>Smarter</span></div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="color: #94a3b8; font-size: 14px;">{{ username }}@hacksmarter.org</span>
+                <a href="/logout" class="btn btn-secondary" style="margin: 0; padding: 8px 16px; font-size: 13px;">Sign Out</a>
+            </div>
+        </div>
+
+        <h3>Your Learning Path</h3>
+        <p>Welcome back, <strong>{{ username }}</strong>. Continue your progress in our realistic penetration testing environments.</p>
+
+        <div class="course-grid">
+            <div class="course-card">
+                <span class="badge">Active Directory</span>
+                <h4 style="margin-top: 12px;">MidGarden2 Lab</h4>
+                <p>Assume breach scenario involving Kerberoasting, Shadow Credentials, and ADCS ESC1 exploitation.</p>
+                <a href="#" style="color: #6366f1; text-decoration: none; font-size: 14px; font-weight: 500;">Launch Lab &rarr;</a>
+            </div>
+            
+            <div class="course-card">
+                <span class="badge">Web Application</span>
+                <h4 style="margin-top: 12px;">Multi-App Attack Chain</h4>
+                <p>Learn to chain JWT, SQLi, XXE, and OAuth vulnerabilities to achieve full server compromise.</p>
+                <a href="#" style="color: #6366f1; text-decoration: none; font-size: 14px; font-weight: 500;">Resume Course &rarr;</a>
+            </div>
+        </div>
+
+        {% if flag %}
+        <div class="admin-panel">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <h3 style="margin: 0; color: #a5b4fc;">Platform Administration</h3>
+            </div>
+            <p style="color: #c7d2fe; margin-bottom: 16px;">Administrator identity verified via OAuth Implicit Trust override. Lab complete.</p>
+            <div class="flag">{{ flag }}</div>
+        </div>
+        {% endif %}
+
+    </div>
+</body>
+</html>

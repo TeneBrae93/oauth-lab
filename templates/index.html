@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Hack Smarter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="brand-logo">Hack<span>Smarter</span></div>
+        <h2>Sign in to access your courses and labs</h2>
+        
+        <div id="error-container" class="error-message hidden"></div>
+        
+        <p style="font-size: 14px; color: #94a3b8; margin-bottom: 24px;">
+            We have migrated to a new centralized authentication system. Please use the Hack Smarter Identity Provider to access your account.
+        </p>
+        
+        <a href="/oauth/auth" class="btn">Continue with HackSmarter ID</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>
