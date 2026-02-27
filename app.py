@@ -3,66 +3,100 @@ import os
 import uuid
 
 app = Flask(__name__)
-# In a real app this would be secure; for the lab, a hardcoded string is fine.
 app.secret_key = 'super_secret_hack_smarter_key'
 
-# --- MOCK DATABASE ---
-# In reality, this would be a database table tracking valid access tokens and who they belong to.
+# --- MOCK DATABASES ---
+# Stores registered users for the SSO provider
+users = {
+    "administrator": "SuperSecretAdminPassword123!" # The target account!
+}
+
+# Stores valid access tokens mapped to their rightful owners
 valid_tokens = {}
 
 # The flag the user is trying to get
 FLAG = "HSM{1mpl1c1t_trU5t_1s_b4d_mkay}"
 
-# --- ROUTES ---
+# --- VULNERABLE CLIENT APP: MAIN ROUTE ---
 
 @app.route('/')
 def index():
-    """Serves the main login page."""
-    # If already logged in, send them to the dashboard
+    """Serves the main login page for the vulnerable client."""
     if 'username' in session:
         return redirect(url_for('dashboard'))
     return render_template('index.html')
 
-# --- MOCK OAUTH PROVIDER ROUTES ---
+# --- HACK SMARTER ID (SSO PROVIDER) ROUTES ---
+
+@app.route('/sso/login', methods=['GET', 'POST'])
+def sso_login():
+    """SSO Provider Login Page"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username in users and users[username] == password:
+            session['sso_user'] = username
+            return redirect(url_for('oauth_auth'))
+        else:
+            return render_template('sso_login.html', error="Invalid username or password.")
+            
+    return render_template('sso_login.html')
+
+@app.route('/sso/register', methods=['GET', 'POST'])
+def sso_register():
+    """SSO Provider Registration Page"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            return render_template('sso_register.html', error="All fields are required.")
+            
+        if username in users:
+            return render_template('sso_register.html', error="Username already exists. Please choose another.")
+            
+        # Register the user and log them into the SSO provider
+        users[username] = password
+        session['sso_user'] = username
+        return redirect(url_for('oauth_auth'))
+        
+    return render_template('sso_register.html')
 
 @app.route('/oauth/auth')
 def oauth_auth():
     """
     Simulates the OAuth provider's authorization endpoint.
-    This is where the user would normally enter their credentials and consent.
+    If the user isn't logged into the SSO provider, redirect them to login.
     """
-    return render_template('mock_consent.html')
+    if 'sso_user' not in session:
+        return redirect(url_for('sso_login'))
+        
+    return render_template('mock_consent.html', username=session['sso_user'])
 
 @app.route('/oauth/approve', methods=['POST'])
 def oauth_approve():
     """
-    Simulates the user clicking "Approve" on the consent screen.
-    Generates an access token and redirects back with the Implicit Grant fragment.
+    Simulates the user clicking "Authorize" on the consent screen.
     """
-    # Simulate authenticating as the standard lab user
-    standard_user = "wiener"
+    if 'sso_user' not in session:
+        return redirect(url_for('sso_login'))
+        
+    current_sso_user = session['sso_user']
     
-    # Generate a random token
+    # Generate a random token and store it linked to the REAL logged-in user
     access_token = uuid.uuid4().hex
+    valid_tokens[access_token] = current_sso_user
     
-    # Store the token in our "database" and link it to the user.
-    # (The vulnerable client app will ignore this linkage later!)
-    valid_tokens[access_token] = standard_user
-    
-    # Implicit flow returns the token in the URL fragment (#)
-    redirect_url = f"{url_for('index')}#access_token={access_token}&username={standard_user}"
+    # Redirect back to the vulnerable client with the fragment
+    redirect_url = f"{url_for('index')}#access_token={access_token}&username={current_sso_user}"
     return redirect(redirect_url)
 
-
-# --- VULNERABLE CLIENT APP ROUTES ---
+# --- VULNERABLE CLIENT APP: API & DASHBOARD ---
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
-    """
-    VULNERABLE ENDPOINT:
-    Accepts the token and username from the frontend SPA.
-    It checks if the token is valid, but DOES NOT verify if the token belongs to that specific user.
-    """
+    """VULNERABLE ENDPOINT: Implicitly trusts the client-provided username."""
     data = request.get_json()
     if not data:
         return jsonify({"success": False, "message": "Invalid request."}), 400
@@ -72,11 +106,9 @@ def api_login():
     
     # 1. Does the token exist in our system?
     if client_token in valid_tokens:
-        # VULNERABILITY HERE: 
-        # The server should check: if valid_tokens[client_token] == client_username:
-        # But it doesn't! It just implicitly trusts the username sent by the client.
+        # VULNERABILITY: It never checks if valid_tokens[client_token] == client_username
         
-        # 2. Log the user in as whatever username they supplied
+        # 2. Log the user into the CLIENT APP as whatever username they supplied
         session['username'] = client_username
         return jsonify({"success": True})
         
@@ -85,15 +117,12 @@ def api_login():
 
 @app.route('/dashboard')
 def dashboard():
-    """
-    Protected area. Shows the flag if the user successfully impersonated 'administrator'.
-    """
+    """Protected area."""
     if 'username' not in session:
         return redirect(url_for('index'))
         
     username = session['username']
     
-    # Check if they successfully exploited the lab
     if username == 'administrator':
         flag = FLAG
     else:
@@ -103,10 +132,9 @@ def dashboard():
 
 @app.route('/logout')
 def logout():
-    """Clears the session."""
-    session.pop('username', None)
+    """Clears all sessions (both Client App and SSO Provider)."""
+    session.clear()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    # Run the app. Listen on all interfaces and bind to port 80 (requires root).
     app.run(host='0.0.0.0', port=80, debug=True)
