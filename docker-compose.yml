@@ -1,12 +1,75 @@
 version: '3.8'
 
+networks:
+  hacksmarter_net:
+    name: hacksmarter_net
+    driver: bridge
+
+volumes:
+  gitea_data:
+  runner_data:
+
 services:
+  # ---------------------------------------------------------
+  # 1. The Vulnerable Lab Application (Target)
+  # ---------------------------------------------------------
   oauth-implicit-lab:
     build: .
     container_name: hacksmarter-oauth-implicit
     ports:
       - "80:80"
+    networks:
+      - hacksmarter_net
     restart: unless-stopped
-    # Drop all unnecessary privileges except what's needed for standard execution
     security_opt:
       - no-new-privileges:true
+    # Mount the local directory so the runner can update files and restart it
+    volumes:
+      - ./:/app
+
+  # ---------------------------------------------------------
+  # 2. Gitea Server (The Web-Based Git Repository)
+  # ---------------------------------------------------------
+  gitea:
+    image: gitea/gitea:1.21.4
+    container_name: hacksmarter-gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__server__DOMAIN=localhost
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__ROOT_URL=http://localhost:3000/
+      # Enable Gitea Actions (the CI/CD pipeline feature)
+      - GITEA__actions__ENABLED=true
+    restart: always
+    networks:
+      - hacksmarter_net
+    ports:
+      - "3000:3000"
+      - "222:22"
+    volumes:
+      - gitea_data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  # ---------------------------------------------------------
+  # 3. Gitea Act Runner (The CI/CD Worker)
+  # ---------------------------------------------------------
+  gitea-runner:
+    image: gitea/act_runner:latest
+    container_name: hacksmarter-runner
+    depends_on:
+      - gitea
+    networks:
+      - hacksmarter_net
+    restart: always
+    environment:
+      - GITEA_INSTANCE_URL=http://gitea:3000
+      # The token will be injected via the setup script on boot
+      - GITEA_RUNNER_REGISTRATION_TOKEN=${RUNNER_TOKEN:-}
+    volumes:
+      - runner_data:/data
+      # This is the magic key: It gives the runner access to the host's Docker engine
+      # so it can tear down and rebuild the oauth-implicit-lab container!
+      - /var/run/docker.sock:/var/run/docker.sock
