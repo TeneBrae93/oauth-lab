@@ -1,0 +1,21 @@
+# Python - Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python - Virtual Environments
+venv/
+env/
+.env/
+
+# Environment Variables / Secrets (Always ignore local secret files)
+.env
+
+# Docker
+.dockerignore
+
+# IDE and OS specific files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  oauth-implicit-lab:
+    build: .
+    container_name: hacksmarter-oauth-implicit
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    # Drop all unnecessary privileges except what's needed for standard execution
+    security_opt:
+      - no-new-privileges:true
